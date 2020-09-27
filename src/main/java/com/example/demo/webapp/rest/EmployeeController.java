@@ -1,0 +1,73 @@
+package com.example.demo.webapp.rest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.Valid;
+
+import com.example.demo.webapp.model.dao.EmployeeRepository;
+import com.example.demo.webapp.model.entities.Employee;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1")
+public class EmployeeController {
+
+    private static final Logger logger = LoggerFactory.getLogger(EmployeeController.class);
+
+    @Autowired
+    private EmployeeRepository repository;
+
+    @GetMapping("/employees")
+    public List<Employee> getAllEmployees() {
+        logger.info("Get all the employees...");
+        return repository.findAll();
+    }
+
+    @GetMapping("/employees/{id}")
+    public ResponseEntity<Employee> getEmployeeById(@PathVariable(value = "id") long employeeId) throws RuntimeException {
+        logger.info("Get employee by id...");
+        Employee employee = repository.findById(employeeId).
+                orElseThrow(() -> new RuntimeException("Employee not found for this id:: " + employeeId));
+        return ResponseEntity.ok().body(employee);
+
+    }
+
+    @PostMapping("/employees")
+    public Employee createEmployee(@Valid @RequestBody Employee employee) {
+        logger.info("Insert employee...");
+        return repository.save(employee);
+    }
+
+    @PutMapping("/employees/{id}")
+    public ResponseEntity<Employee> EmployeeById(@PathVariable(value = "id") long employeeId, @RequestBody Employee updatedEmployee) throws RuntimeException {
+        logger.info("Update employee...");
+        Employee employee = repository.findById(employeeId).
+                orElseThrow(() -> new RuntimeException("Employee not found for this id:: " + employeeId));
+        employee.setName(updatedEmployee.getName());
+        employee.setAge(updatedEmployee.getAge());
+        repository.save(employee);
+        return ResponseEntity.ok().body(employee);
+
+    }
+
+    @DeleteMapping("/employees/{id}")
+    public void deleteEmployee(@PathVariable(value = "id") long employeeId) throws RuntimeException {
+        logger.info("Delete employee...");
+        Employee employee = repository.findById(employeeId).
+                orElseThrow(() -> new RuntimeException("Employee not found for this id:: " + employeeId));
+        repository.delete(employee);
+    }
+}
